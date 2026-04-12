@@ -64,9 +64,9 @@ const PIZZAS_MENU = [
 ];
 
 const SIZES_REGULAR = [
-  { id: "sm", label: "صغير", priceOld: "35,000", priceNew: "350", numericPrice: 35000 },
-  { id: "md", label: "وسط",  priceOld: "50,000", priceNew: "500", numericPrice: 50000 },
-  { id: "lg", label: "كبير", priceOld: "65,000", priceNew: "650", numericPrice: 65000 },
+  { id: "sm", label: "صغير", priceOld: "30,000", priceNew: "300", numericPrice: 30000 },
+  { id: "md", label: "وسط",  priceOld: "40,000", priceNew: "400", numericPrice: 40000 },
+  { id: "lg", label: "كبير", priceOld: "55,000", priceNew: "550", numericPrice: 55000 },
 ];
 
 const FLOATERS = [
