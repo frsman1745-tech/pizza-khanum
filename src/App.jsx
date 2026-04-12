@@ -339,7 +339,7 @@ export default function PizzaKhanum() {
   if (screen === "landing") return (
     <div dir="rtl" style={{ fontFamily: "'Noto Kufi Arabic',sans-serif" }}>
       <style>{CSS}</style>
-      <div className="noise-bg" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at 30% 40%,#1f1508,#0f0f0f 60%,#0a0a0a)", position: "relative", overflow: "hidden", textAlign: "center", padding: 24 }}>
+      <div className="noise-bg" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at 30% 40%,#1f1508,#161616 60%,#141414)", position: "relative", overflow: "hidden", textAlign: "center", padding: 24 }}>
         {FLOATERS.map((f, i) => (
           <div key={i} style={{ position: "absolute", fontSize: "1.8rem", opacity: .17, left: f.l, top: f.t, animation: `floatUp ${f.d}s ease-in-out ${f.dl}s infinite`, pointerEvents: "none", filter: "blur(.4px)" }}>{f.e}</div>
         ))}
