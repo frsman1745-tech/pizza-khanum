@@ -5,8 +5,8 @@ const FEATURED = [
   {
     id: "meter", label: "بيتزا المتر",
     priceOld: "150,000", priceNew: "1,500", numericPrice: 150000,
-    sliceCount: 8, cols: 4,
-    desc: "متر كامل من الشهية المتنوعة لتشاركه مع أحبّك",
+    sliceCount: 6, cols: 6,
+    desc: "متر كامل من الشهية المتنوعة لتشاركه مع من تحب",
   },
   {
     id: "sixtyforty", label: "بيتزا 60×40",
