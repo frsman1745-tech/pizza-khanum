@@ -355,7 +355,7 @@ export default function PizzaKhanum() {
           <button className="btn-gold" onClick={() => setScreen("menu")} style={{ padding: "16px 52px", borderRadius: "50px", fontSize: "1.05rem", fontWeight: 700, color: "#0f0f0f", letterSpacing: "1px", animation: "glow 3s ease-in-out infinite" }}>
             ابدأ الطلب ✨
           </button>
-          <p style={{ marginTop: 18, fontSize: ".68rem", color: "#0a0a0a", letterSpacing: "3px" }}>PIZZA KHANUM • منذ 2020</p>
+          <p style={{ marginTop: 18, fontSize: ".68rem", color: "#515151", letterSpacing: "3px" }}>PIZZA KHANUM • منذ 2020</p>
         </div>
       </div>
     </div>
