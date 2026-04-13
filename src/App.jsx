@@ -5,8 +5,8 @@ const FEATURED = [
   {
     id: "meter", label: "بيتزا المتر",
     priceOld: "150,000", priceNew: "1,500", numericPrice: 150000,
-    sliceCount: 6, cols: 6,
-    desc: "متر كامل من الشهية المتنوعة لتشاركه مع من تحب",
+    sliceCount: 8, cols: 4,
+    desc: "متر كامل من الشهية المتنوعة لتشاركه مع أحبّك",
   },
   {
     id: "sixtyforty", label: "بيتزا 60×40",
@@ -64,9 +64,9 @@ const PIZZAS_MENU = [
 ];
 
 const SIZES_REGULAR = [
-  { id: "sm", label: "صغير", priceOld: "30,000", priceNew: "300", numericPrice: 30000 },
-  { id: "md", label: "وسط",  priceOld: "40,000", priceNew: "400", numericPrice: 40000 },
-  { id: "lg", label: "كبير", priceOld: "55,000", priceNew: "550", numericPrice: 55000 },
+  { id: "sm", label: "صغير", priceOld: "35,000", priceNew: "350", numericPrice: 35000 },
+  { id: "md", label: "وسط",  priceOld: "50,000", priceNew: "500", numericPrice: 50000 },
+  { id: "lg", label: "كبير", priceOld: "65,000", priceNew: "650", numericPrice: 65000 },
 ];
 
 const FLOATERS = [
@@ -79,8 +79,6 @@ const FLOATERS = [
 ];
 
 /* ─────────────────────── COMPONENTS ────────────────────────── */
-const [errors, setErrors] = useState({});
-const [mapCoords, setMapCoords] = useState(null);
 function PizzaImg({ label, style }) {
   return (
     <div style={{
@@ -195,34 +193,32 @@ const CSS = `
   }
 `;
 
-/* ══════════════════════════════════════════════════════════════ */
+/* ─────────────────── LOCATION PICKER ───────────────────────── */
 function LocationPicker({ onSelect }) {
-  const mapRef = useRef(null);
-  const markerRef = useRef(null);
+  const mapRef         = useRef(null);
+  const markerRef      = useRef(null);
   const mapInstanceRef = useRef(null);
 
   useEffect(() => {
     if (mapInstanceRef.current) return;
+    if (!window.L) return;
 
-    const map = L.map(mapRef.current).setView([33.51, 36.29], 12);
+    const map = window.L.map(mapRef.current).setView([33.51, 36.29], 12);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap",
     }).addTo(map);
 
-    map.on('click', (e) => {
+    map.on("click", (e) => {
       const { lat, lng } = e.latlng;
+      if (markerRef.current) markerRef.current.remove();
 
-      if (markerRef.current) {
-        markerRef.current.remove();
-      }
-
-      markerRef.current = L.marker([lat, lng], { draggable: true })
+      markerRef.current = window.L.marker([lat, lng], { draggable: true })
         .addTo(map)
-        .bindPopup('موقعك المحدد ✓')
+        .bindPopup("موقعك المحدد ✓")
         .openPopup();
 
-      markerRef.current.on('dragend', (ev) => {
+      markerRef.current.on("dragend", (ev) => {
         const pos = ev.target.getLatLng();
         onSelect({ lat: pos.lat.toFixed(5), lng: pos.lng.toFixed(5) });
       });
@@ -237,15 +233,14 @@ function LocationPicker({ onSelect }) {
     <div
       ref={mapRef}
       style={{
-        width: '100%', height: '280px',
-        borderRadius: '14px',
-        border: '1px solid #C8A96A33',
-        overflow: 'hidden',
-        marginBottom: '12px',
+        width: "100%", height: 260, borderRadius: 14,
+        border: "1px solid #C8A96A33", overflow: "hidden", marginBottom: 10,
       }}
     />
   );
 }
+
+/* ══════════════════════════════════════════════════════════════ */
 export default function PizzaKhanum() {
   const [screen, setScreen]           = useState("landing");
   const [builderPizza, setBuilderPizza] = useState(null);
@@ -259,6 +254,7 @@ export default function PizzaKhanum() {
   const [deliveryType, setDeliveryType] = useState("");
   const [locationTxt,  setLocationTxt]  = useState("");
   const [errors,       setErrors]       = useState({});
+  const [mapCoords,    setMapCoords]     = useState(null);
 
   const cartTotal = cart.reduce((s, i) => s + i.numericPrice * i.qty, 0);
   const fmt = n => n.toLocaleString("ar-EG");
@@ -328,7 +324,7 @@ export default function PizzaKhanum() {
 
   function checkout() {
     const errs = {};
-    if (!phone.trim())       errs.phone    = true;
+    if (!phoneValid)       errs.phone    = true;
     if (!deliveryType)       errs.delivery = true;
     if (deliveryType === "delivery" && !locationTxt.trim()) errs.location = true;
     if (Object.keys(errs).length) { setErrors(errs); return; }
@@ -342,23 +338,21 @@ export default function PizzaKhanum() {
       `💰 المجموع: ${fmt(cartTotal)} ل.س / ${fmt(cartTotal / 100)} ل.ج`,
       "",
       `🚗 طريقة الاستلام: ${deliveryType === "pickup" ? "استلام من الفرع" : "توصيل"}`,
-deliveryType === "delivery"
-  ? `📍 الموقع: ${locationTxt}${mapCoords ? `\n🗺 خريطة: https://maps.google.com/?q=${mapCoords.lat},${mapCoords.lng}` : ""}`
-  : "",      "",
+      deliveryType === "delivery"
+        ? `📍 الموقع: ${locationTxt}${mapCoords ? `\n🗺 خريطة: https://maps.google.com/?q=${mapCoords.lat},${mapCoords.lng}` : ""}`
+        : "",
+      "",
       `📞 رقم التواصل: ${phone}`,
     ].filter(Boolean).join("\n");
     window.open(`https://wa.me/963998950904?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
-  const canCheckout = phone.trim() && deliveryType && (deliveryType !== "delivery" || locationTxt.trim());
+  const phoneValid  = /^\d{10}$/.test(phone.trim());
+  const canCheckout = phoneValid && deliveryType && (deliveryType !== "delivery" || locationTxt.trim());
 
   /* ─── Header util ─────────────────────────────────── */
-  
-  
   function Header({ title, onBack }) {
     return (
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <div style={{ position: "sticky", top: 0, zIndex: 20, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", padding: "13px 16px", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: "#C8A96A", cursor: "pointer", fontSize: "1.5rem", lineHeight: 1, padding: 0 }}>‹</button>
         <h2 style={{ fontSize: ".95rem", fontWeight: 700, color: "#E5D3B3" }}>{title}</h2>
@@ -396,7 +390,7 @@ deliveryType === "delivery"
   if (screen === "landing") return (
     <div dir="rtl" style={{ fontFamily: "'Noto Kufi Arabic',sans-serif" }}>
       <style>{CSS}</style>
-      <div className="noise-bg" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at 100% 100%,#2b2011,#222222 100%,#212121)", position: "relative", overflow: "hidden", textAlign: "center", padding: 24 }}>
+      <div className="noise-bg" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at 30% 40%,#1f1508,#0f0f0f 60%,#0a0a0a)", position: "relative", overflow: "hidden", textAlign: "center", padding: 24 }}>
         {FLOATERS.map((f, i) => (
           <div key={i} style={{ position: "absolute", fontSize: "1.8rem", opacity: .17, left: f.l, top: f.t, animation: `floatUp ${f.d}s ease-in-out ${f.dl}s infinite`, pointerEvents: "none", filter: "blur(.4px)" }}>{f.e}</div>
         ))}
@@ -412,7 +406,7 @@ deliveryType === "delivery"
           <button className="btn-gold" onClick={() => setScreen("menu")} style={{ padding: "16px 52px", borderRadius: "50px", fontSize: "1.05rem", fontWeight: 700, color: "#0f0f0f", letterSpacing: "1px", animation: "glow 3s ease-in-out infinite" }}>
             ابدأ الطلب ✨
           </button>
-          <p style={{ marginTop: 18, fontSize: ".68rem", color: "#515151", letterSpacing: "3px" }}>PIZZA KHANUM • منذ 2020</p>
+          <p style={{ marginTop: 18, fontSize: ".68rem", color: "#2a2a2a", letterSpacing: "3px" }}>PIZZA KHANUM • منذ 2020</p>
         </div>
       </div>
     </div>
@@ -737,55 +731,72 @@ deliveryType === "delivery"
           </div>
 
           {/* Location */}
-{deliveryType === "delivery" && (
-  <div className="pop-in" style={{ marginBottom: 18 }}>
+          {deliveryType === "delivery" && (
+            <div className="pop-in" style={{ marginBottom: 18 }}>
+              <p style={{ fontSize: ".65rem", color: errors.location ? "#ef4444" : "#C8A96A88", letterSpacing: "2px", marginBottom: 10 }}>
+                {errors.location ? "⚠ حدد موقعك أو اكتب العنوان" : "📍 حدد موقعك على الخريطة *"}
+              </p>
 
-    <p style={{ fontSize: ".65rem", color: errors.location ? "#ef4444" : "#C8A96A88", letterSpacing: "2px", marginBottom: 10 }}>
-      {errors.location ? "⚠ حدد موقعك أو اكتب العنوان" : "📍 حدد موقعك على الخريطة *"}
-    </p>
+              <LocationPicker onSelect={(coords) => {
+                setMapCoords(coords);
+                setLocationTxt(`https://maps.google.com/?q=${coords.lat},${coords.lng}`);
+                setErrors(ev => ({ ...ev, location: false }));
+              }} />
 
-    <LocationPicker onSelect={(coords) => {
-      setMapCoords(coords);
-      setLocationTxt(`https://maps.google.com/?q=${coords.lat},${coords.lng}`);
-      setErrors(ev => ({ ...ev, location: false }));
-    }} />
+              {mapCoords && (
+                <div style={{ background: "#0d1a0d", border: "1px solid #4CAF5044", borderRadius: 10, padding: "9px 14px", marginBottom: 12, fontSize: ".72rem", color: "#4CAF50" }}>
+                  ✓ تم تحديد الموقع — يمكنك سحب الدبوس لتعديله
+                </div>
+              )}
 
-    {mapCoords && (
-      <div style={{
-        background: '#0d1a0d', border: '1px solid #4CAF5044',
-        borderRadius: 10, padding: '10px 14px', marginBottom: 12,
-        fontSize: '.72rem', color: '#4CAF50'
-      }}>
-        ✓ تم تحديد الموقع — يمكنك سحب الدبوس لتعديله
-      </div>
-    )}
+              <p style={{ fontSize: ".63rem", color: "#555", marginBottom: 8 }}>أو اكتب العنوان يدوياً</p>
+              <textarea
+                className={errors.location ? "err-field" : ""}
+                rows={2}
+                placeholder="المحافظة، الحي، الشارع، أقرب نقطة دالة..."
+                value={mapCoords ? "" : locationTxt}
+                onChange={e => {
+                  setLocationTxt(e.target.value);
+                  setMapCoords(null);
+                  setErrors(ev => ({ ...ev, location: false }));
+                }}
+                style={{ resize: "none" }}
+              />
+            </div>
+          )}
 
-    <p style={{ fontSize: ".65rem", color: "#8B6B4A", marginBottom: 8, marginTop: 4 }}>
-      أو اكتب العنوان يدوياً
-    </p>
-    <textarea
-      className={errors.location ? "err-field" : ""}
-      rows={2}
-      placeholder="المحافظة، الحي، الشارع، أقرب نقطة دالة..."
-      value={mapCoords ? "" : locationTxt}
-      onChange={e => {
-        setLocationTxt(e.target.value);
-        setMapCoords(null);
-        setErrors(ev => ({ ...ev, location: false }));
-      }}
-      style={{ resize: "none" }}
-    />
-  </div>
-)}
           {/* Phone */}
           <p style={{ fontSize: ".65rem", color: errors.phone ? "#ef4444" : "#C8A96A88", letterSpacing: "2px", marginBottom: 8 }}>
             {errors.phone ? "⚠ رقم الهاتف إلزامي" : "رقم الهاتف للتواصل *"}
           </p>
-          <input type="tel" className={errors.phone ? "err-field" : ""} placeholder="09xxxxxxxx" value={phone}
-            onChange={e => { setPhone(e.target.value); setErrors(ev => ({ ...ev, phone: false })); }}
-            style={{ marginBottom: 6 }}
+          <input
+            type="tel"
+            className={errors.phone || (phone.length > 0 && phone.length !== 10) ? "err-field" : ""}
+            placeholder="09xxxxxxxx"
+            value={phone}
+            maxLength={10}
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, "");
+              setPhone(val);
+              setErrors(ev => ({ ...ev, phone: false }));
+            }}
+            style={{ marginBottom: 4 }}
           />
-          <p style={{ fontSize: ".62rem", color: "#383838", marginBottom: 22 }}>هذا الحقل إلزامي، سيتم التواصل معك على هذا الرقم لتأكيد الطلب</p>
+          {/* Live digit counter */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+            <p style={{ fontSize: ".62rem", color: "#383838" }}>هذا الحقل إلزامي، يجب أن يكون 10 أرقام بالضبط</p>
+            <span style={{
+              fontSize: ".62rem", fontWeight: 700,
+              color: phone.length === 0 ? "#333" : phone.length === 10 ? "#4CAF50" : "#ef4444"
+            }}>
+              {phone.length}/10
+            </span>
+          </div>
+          {phone.length > 0 && phone.length < 10 && (
+            <p style={{ fontSize: ".62rem", color: "#ef4444", marginBottom: 12, marginTop: -12 }}>
+              ⚠ الرقم ناقص — أدخل {10 - phone.length} أرقام إضافية
+            </p>
+          )}
 
           {/* Checkout */}
           <button className="btn-gold" disabled={!canCheckout} onClick={checkout}
@@ -795,7 +806,8 @@ deliveryType === "delivery"
           </button>
           {!canCheckout && (
             <p style={{ textAlign: "center", fontSize: ".65rem", color: "#333", marginTop: 8 }}>
-              {!phone.trim() ? "أدخل رقم هاتفك لإتمام الطلب"
+              {!phoneValid
+                ? phone.length === 0 ? "أدخل رقم هاتفك لإتمام الطلب" : `الرقم يجب أن يكون 10 أرقام (أدخلت ${phone.length})`
                 : !deliveryType ? "اختر طريقة الاستلام"
                 : "أدخل موقعك لإتمام الطلب"}
             </p>
