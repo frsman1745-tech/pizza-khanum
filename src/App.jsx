@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 /* ─────────────────────────── DATA ─────────────────────────── */
 const FEATURED = [
@@ -79,6 +79,8 @@ const FLOATERS = [
 ];
 
 /* ─────────────────────── COMPONENTS ────────────────────────── */
+const [errors, setErrors] = useState({});
+const [mapCoords, setMapCoords] = useState(null);
 function PizzaImg({ label, style }) {
   return (
     <div style={{
@@ -194,6 +196,56 @@ const CSS = `
 `;
 
 /* ══════════════════════════════════════════════════════════════ */
+function LocationPicker({ onSelect }) {
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
+  useEffect(() => {
+    if (mapInstanceRef.current) return;
+
+    const map = L.map(mapRef.current).setView([33.51, 36.29], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    map.on('click', (e) => {
+      const { lat, lng } = e.latlng;
+
+      if (markerRef.current) {
+        markerRef.current.remove();
+      }
+
+      markerRef.current = L.marker([lat, lng], { draggable: true })
+        .addTo(map)
+        .bindPopup('موقعك المحدد ✓')
+        .openPopup();
+
+      markerRef.current.on('dragend', (ev) => {
+        const pos = ev.target.getLatLng();
+        onSelect({ lat: pos.lat.toFixed(5), lng: pos.lng.toFixed(5) });
+      });
+
+      onSelect({ lat: lat.toFixed(5), lng: lng.toFixed(5) });
+    });
+
+    mapInstanceRef.current = map;
+  }, []);
+
+  return (
+    <div
+      ref={mapRef}
+      style={{
+        width: '100%', height: '280px',
+        borderRadius: '14px',
+        border: '1px solid #C8A96A33',
+        overflow: 'hidden',
+        marginBottom: '12px',
+      }}
+    />
+  );
+}
 export default function PizzaKhanum() {
   const [screen, setScreen]           = useState("landing");
   const [builderPizza, setBuilderPizza] = useState(null);
@@ -290,8 +342,9 @@ export default function PizzaKhanum() {
       `💰 المجموع: ${fmt(cartTotal)} ل.س / ${fmt(cartTotal / 100)} ل.ج`,
       "",
       `🚗 طريقة الاستلام: ${deliveryType === "pickup" ? "استلام من الفرع" : "توصيل"}`,
-      deliveryType === "delivery" ? `📍 الموقع: ${locationTxt}` : "",
-      "",
+deliveryType === "delivery"
+  ? `📍 الموقع: ${locationTxt}${mapCoords ? `\n🗺 خريطة: https://maps.google.com/?q=${mapCoords.lat},${mapCoords.lng}` : ""}`
+  : "",      "",
       `📞 رقم التواصل: ${phone}`,
     ].filter(Boolean).join("\n");
     window.open(`https://wa.me/963998950904?text=${encodeURIComponent(msg)}`, "_blank");
@@ -300,8 +353,12 @@ export default function PizzaKhanum() {
   const canCheckout = phone.trim() && deliveryType && (deliveryType !== "delivery" || locationTxt.trim());
 
   /* ─── Header util ─────────────────────────────────── */
+  
+  
   function Header({ title, onBack }) {
     return (
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <div style={{ position: "sticky", top: 0, zIndex: 20, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", padding: "13px 16px", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: "#C8A96A", cursor: "pointer", fontSize: "1.5rem", lineHeight: 1, padding: 0 }}>‹</button>
         <h2 style={{ fontSize: ".95rem", fontWeight: 700, color: "#E5D3B3" }}>{title}</h2>
@@ -680,19 +737,46 @@ export default function PizzaKhanum() {
           </div>
 
           {/* Location */}
-          {deliveryType === "delivery" && (
-            <div className="pop-in" style={{ marginBottom: 18 }}>
-              <p style={{ fontSize: ".65rem", color: errors.location ? "#ef4444" : "#C8A96A88", letterSpacing: "2px", marginBottom: 8 }}>
-                {errors.location ? "⚠ الموقع إلزامي للتوصيل" : "الموقع / العنوان *"}
-              </p>
-              <textarea className={errors.location ? "err-field" : ""} rows={2} placeholder="المحافظة، الحي، الشارع، أقرب نقطة دالة..."
-                value={locationTxt}
-                onChange={e => { setLocationTxt(e.target.value); setErrors(ev => ({ ...ev, location: false })); }}
-                style={{ resize: "none" }}
-              />
-            </div>
-          )}
+{deliveryType === "delivery" && (
+  <div className="pop-in" style={{ marginBottom: 18 }}>
 
+    <p style={{ fontSize: ".65rem", color: errors.location ? "#ef4444" : "#C8A96A88", letterSpacing: "2px", marginBottom: 10 }}>
+      {errors.location ? "⚠ حدد موقعك أو اكتب العنوان" : "📍 حدد موقعك على الخريطة *"}
+    </p>
+
+    <LocationPicker onSelect={(coords) => {
+      setMapCoords(coords);
+      setLocationTxt(`https://maps.google.com/?q=${coords.lat},${coords.lng}`);
+      setErrors(ev => ({ ...ev, location: false }));
+    }} />
+
+    {mapCoords && (
+      <div style={{
+        background: '#0d1a0d', border: '1px solid #4CAF5044',
+        borderRadius: 10, padding: '10px 14px', marginBottom: 12,
+        fontSize: '.72rem', color: '#4CAF50'
+      }}>
+        ✓ تم تحديد الموقع — يمكنك سحب الدبوس لتعديله
+      </div>
+    )}
+
+    <p style={{ fontSize: ".65rem", color: "#8B6B4A", marginBottom: 8, marginTop: 4 }}>
+      أو اكتب العنوان يدوياً
+    </p>
+    <textarea
+      className={errors.location ? "err-field" : ""}
+      rows={2}
+      placeholder="المحافظة، الحي، الشارع، أقرب نقطة دالة..."
+      value={mapCoords ? "" : locationTxt}
+      onChange={e => {
+        setLocationTxt(e.target.value);
+        setMapCoords(null);
+        setErrors(ev => ({ ...ev, location: false }));
+      }}
+      style={{ resize: "none" }}
+    />
+  </div>
+)}
           {/* Phone */}
           <p style={{ fontSize: ".65rem", color: errors.phone ? "#ef4444" : "#C8A96A88", letterSpacing: "2px", marginBottom: 8 }}>
             {errors.phone ? "⚠ رقم الهاتف إلزامي" : "رقم الهاتف للتواصل *"}
