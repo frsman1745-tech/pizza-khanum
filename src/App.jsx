@@ -311,7 +311,7 @@ return (
   >
     <div style={{
       display: "flex",
-      transform: `translateX(-${idx * 100}%)`,
+      transform: `translateX(${idx * 100}%)`,
       transition: animated ? "transform .44s cubic-bezier(.25,.46,.45,.94)" : "none",
       willChange: "transform",
     }}
@@ -711,7 +711,7 @@ if (screen === “menu”) return (
   </div>
 
   {cart.length > 0 && (
-    <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", zIndex: 40 }}>
+    <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(50%)", zIndex: 40 }}>
       <button className="btn-gold pop-in" onClick={() => setScreen("summary")} style={{ padding: "13px 30px", borderRadius: "50px", fontSize: ".88rem", fontWeight: 700, color: "#0f0f0f", boxShadow: "0 8px 30px #00000099", display: "flex", alignItems: "center", gap: 10 }}>
         <span>🧾 عرض الطلب</span>
         <span style={{ background: "#0f0f0f22", borderRadius: 20, padding: "2px 10px", fontSize: ".8rem" }}>{fmt(cartTotal)} ل.س</span>
